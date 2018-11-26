@@ -1,0 +1,36 @@
+{
+    "software": {
+        "drimseq": "/src/tissues/drimseq/DRIMseq_quant_DRIMseq.R"
+    },
+    "conditions": {
+    	"sollner_all":"/tissues/sollner/salmon/",
+    	"sollner_noIR":"/tissues/sollner/salmon_no_IR/",
+    	"sollner_noIR_UTR":"/tissues/sollner/salmon_UTR/",
+    	"li_PE_all":"/tissues/li/salmon/",
+    	"li_PE_noIR":"/tissues/li/salmon_no_IR/",
+    	"li_PE_noIR_UTR":"/tissues/li/salmon_UTR/",
+    	"li_SE_all":"/tissues/li_SE/salmon/",
+    	"li_SE_noIR":"/tissues/li_SE/salmon_no_IR/",
+    	"li_SE_noIR_UTR":"/tissues/li_SE/salmon_UTR/",
+    	"li_SE_50_all":"/tissues/li_SE_50/salmon/",
+    	"li_SE_50_all_noIR":"/tissues/li_SE_50/salmon_no_IR/",
+    	"li_SE_50_all_noIR_UTR":"/tissues/li_SE_50/salmon_UTR/"
+    },
+    "directories": {
+    	"out": "/drimseq/results/"
+    },
+    "annotations": {
+    	"sollner_all": "/sollner_sample_annotation.csv",
+    	"sollner_noIR": "/sollner_sample_annotation.csv",
+    	"sollner_noIR_UTR": "/sollner_sample_annotation.csv",
+    	"li_PE_all": "/tissue_annotations.csv",
+    	"li_PE_noIR": "/tissue_annotations.csv",
+    	"li_PE_noIR_UTR": "/tissue_annotations.csv",
+    	"li_SE_all": "/tissue_annotations.csv",
+    	"li_SE_noIR": "/tissue_annotations.csv",
+    	"li_SE_noIR_UTR": "/tissue_annotations.csv",
+    	"li_SE_50_all": "/tissue_annotations.csv",
+    	"li_SE_50_all_noIR": "/tissue_annotations.csv",
+    	"li_SE_50_all_noIR_UTR": "/tissue_annotations.csv"
+    }
+}

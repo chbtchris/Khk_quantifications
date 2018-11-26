@@ -1,0 +1,12 @@
+{
+    "__default__" :
+    {
+        "queue"  : "normal.4h",
+        "time"   : "03:55",
+        "n"      : 23,
+        "mem"    : "\"rusage[mem=3072]\"",
+        "name"   : "JOBNAME.{rule}.{wildcards}",
+        "output" : "/reports/{rule}.{wildcards}.out",
+        "error"  : "/reports/{rule}.{wildcards}.err"
+    }
+}

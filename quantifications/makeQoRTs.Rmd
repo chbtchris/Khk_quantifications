@@ -1,0 +1,31 @@
+---
+title: "QoRTs PE mouse tissues"
+author: "C. Chabbert"
+date: "6/25/2018"
+output: html_document
+---
+
+
+```{r setup, message=FALSE, warning=FALSE}
+## Libraries
+library("QoRTs")
+
+## Sample annotations
+decoder = read.table("design.txt",
+                     stringsAsFactors = FALSE,
+                     header = TRUE) 
+
+## Directory where reports are stored
+directory.qorts = "/tissues/qorts/"
+```
+
+We now read the data and generate the report, with a color by group id (Genotype x Condition)
+
+```{r report}
+res <- read.qc.results.data(infile.dir = directory.qorts, 
+                            decoder = decoder,
+                            calc.DESeq2 = TRUE, calc.edgeR = TRUE)
+
+makeMultiPlot.all(res, 
+                  outfile.dir = "/tissues/qorts/plots_tissues/")
+```

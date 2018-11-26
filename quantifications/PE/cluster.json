@@ -1,0 +1,41 @@
+{
+    "__default__" :
+    {
+        "queue"  : "normal.4h",
+        "time"   : "03:55",
+        "n"      : 1,
+        "mem"    : "\"rusage[mem=1024]\"",
+        "name"   : "JOBNAME.{rule}.{wildcards}",
+        "output" : "/logs/{rule}.{wildcards}.out",
+        "error"  : "/logs/{rule}.{wildcards}.err"
+    },
+    "star_align" :
+    {
+        "queue"  : "normal.4h",
+        "time"   : "03:55",
+        "n"      : 24,
+        "name"   : "JOBNAME.star_align.{wildcards}",
+        "output" : "/logs/star_align.{wildcards}.out",
+        "error"  : "/logs/star_align.{wildcards}.err"
+    },
+    "salmon_quantify" :
+    {
+        "n"     : 24
+    },
+    "salmon_quantify_wIR" :
+    {
+        "n"     : 24
+    },
+    "sort" :
+    {
+	"mem"   : "\"rusage[mem=8192]\""
+    },
+    "mark_duplicates" :
+    {
+    	"mem"   : "\"rusage[mem=10240,scratch=10240]\""
+    },
+    "QoRT" : 
+    {
+    	"mem"   : "\"rusage[mem=16384]\""
+    }
+}

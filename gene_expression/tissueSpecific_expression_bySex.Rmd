@@ -1,0 +1,208 @@
+---
+title: "Influence of Sex"
+author: "C. Chabbert"
+date: "9/5/2018"
+output: html_document
+---
+
+This script will assess whether Khk expression levels are tissue specific.
+
+```{r setup}
+## Libraries
+library("DESeq2")
+library("tximport")
+library("DT")
+
+## Useful functions
+Load_QoRTs_counts <- function(decoder, dir, type){
+  
+  ## Set up sample list together with the directories
+  qc.data.dir = as.character(decoder$qc.data.dir)
+  names(qc.data.dir) = as.character(decoder$unique.ID)
+  
+  ## Load counts
+  raw.counts.list = lapply(names(qc.data.dir),
+                           function(x){ Load_QoRTs_table(x, qc.data.dir, dir, type) })
+  
+  ## Collapse list into data frame and re-format
+  df.counts = dplyr::bind_rows(raw.counts.list) %>%
+    tidyr::spread(Sample, Count)
+  
+  ## Conversion to a DESeq compatible matrix
+  mat.counts = as.matrix(df.counts[, 2:ncol(df.counts)])
+  colnames(mat.counts) = colnames(df.counts[, 2:ncol(df.counts)])
+  rownames(mat.counts) = as.character(df.counts$Gene)
+  
+  return(mat.counts)
+
+}
+
+Load_QoRTs_table <- function(sample, qc.data.dir, dir, type){
+  
+  ## Pass the extension name for each file
+  f.extension = "_"
+  if (type == "DESeq"){
+    f.extension = "QC.geneCounts.formatted.for.DESeq.txt.gz"
+  }
+  else if (type == "DEXSeq"){
+    f.extension = "QC.exonCounts.formatted.for.DEXSeq.txt.gz"
+  }
+  
+  ## Create path to load
+  path = paste(dir, 
+               qc.data.dir[sample], 
+               f.extension, 
+               sep = "/")
+  
+  ## Load the data
+  df = read.delim(path,
+                  header = F, 
+                  stringsAsFactors = F,
+                  sep = "\t")
+  
+  ## Addiiton of sample information and column names
+  df$Sample = gsub("_qorts", "", qc.data.dir[sample])
+  colnames(df) = c("Gene", "Count", "Sample")
+  
+  return(df)
+}
+```
+
+
+```{r data_load}
+## Load count tables from QoRTs (they should be DESeq2 compatible)
+
+## Sample annotations
+decoder = read.csv("tissue_annotations.csv",
+                   stringsAsFactors = FALSE,
+                   header = TRUE) %>%
+  dplyr::rename(unique.ID = Sample,
+                group.ID = Group) %>%
+  dplyr::mutate(qc.data.dir = paste0(unique.ID, "_qorts")) %>%
+  dplyr::filter(!(group.ID %in% c("testis", "ovary")))
+
+# Directory where reports are stored
+directory.qorts = "/qorts/"
+
+# Data load
+mat.counts = Load_QoRTs_counts(decoder, directory.qorts, "DESeq")
+```
+
+
+# 1 -- Preparation of the DESeq2 objects
+
+In order to conduct the differential expression analysis, we now prepare the DESeq2 object,
+starting with the experimental design and conditions.
+
+```{r design}
+## Preparation of design matrix
+colData = dplyr::rename(decoder, 
+                        Sample = unique.ID, Tissue = group.ID) %>%
+  dplyr::select(-qc.data.dir)
+
+rownames(colData) = as.character(colData$Sample)
+
+colData$Sample    = factor(colData$Sample, levels = colData$Sample)
+colData$Tissue  = factor(colData$Tissue, 
+                         levels = c("adrenal_gland", "bone_marrow", "brain", "forestomach",
+                                    "heart", "kidney", "large_intestine", "liver",
+                                    "lung", "muscle", "small_intestine",
+                                    "spleen", "stomach", "thymus"))
+colData$Sex = factor(colData$Sex,
+                    levels = c("female", "male"))
+
+# We create an annotation df for plotting functions
+annotations.df = colData
+```
+
+As QoRTs includes some "non-gene" counts (for ex. multiple alignments), we need
+to filter these out before proceding with DESeq.
+
+```{r mat_cleanup}
+## row ids
+ids = grep("ENS", rownames(mat.counts), invert = TRUE)
+
+## Display results
+print(mat.counts[ids,])
+
+## Matrix cleanup
+mat.counts.all = mat.counts
+mat.counts = mat.counts[, rownames(colData)]
+mat.counts = mat.counts[-ids, row.names(colData)]
+```
+
+The next step will be to clean up the gene list to remove rRNA, tRNAs,
+pseudo genes and other transcript categories which cannot be captured by
+the protocol.
+
+```{r gene_cleanup}
+toExclude = c(ig_variable_chains, ig_pseudogenes, vault,
+              nmd_degradation, non_coding_other, pseudogenes, lincRNA, others)
+gtf = rtracklayer::import(con = "/mouse/M14_GRCm38.p5/gencode.vM14.primary_assembly.annotation.gtf.gz")
+genes.to.keep = data.frame(gtf[, c("type", "gene_id", "gene_name", "gene_type")]) %>%
+  dplyr::filter(type == "gene") %>%
+  dplyr::filter(!(gene_type %in% toExclude))
+
+mat.counts = mat.counts[as.character(genes.to.keep$gene_id),]
+```
+
+We can now create a DESeq object. In order to simplify the first analysis,
+we create a "Group" variable which will describe both the genotype and the condition.
+The introduction of a proper formula with interaction terms may be checked later on
+when testing for the effect on condition or of genotype using a Likelihood Ratio.
+
+```{r deseq_object}
+## Creation of the DESeq2 objects
+dds = DESeqDataSetFromMatrix(countData = mat.counts,
+                             colData = colData,
+                             design = ~ Tissue + Tissue:Sex)
+```
+
+# 2 -- Differential gene expression analysis
+
+Before running the dge analysis, we first remove genes with very low couns
+across all samples (threshold set at 50)
+
+```{r size_factors}
+## Check how many genes have less than 20 supporting reads
+sum(rowSums(counts(dds)) < 50)
+
+## These genes are removed from downstreem analysis
+dds <- dds[rowSums(counts(dds)) > 50,]
+
+## We now estimate the size factors
+dds <- estimateSizeFactors(dds)
+```
+
+We examine the size factors:
+
+```{r sizeFactors_plot, fig.align = "center", fig.width = 10, fig.height = 6}
+annotations.df$SizeFactors = sizeFactors(dds)[row.names(annotations.df)]
+
+ggplot(annotations.df, aes(Sample, SizeFactors)) +
+  geom_point(aes(col = Tissue), size = 5) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+We use a LRT approach to evaluate which genes have a sex specific expression
+in each tissue. The output is saved as an RData object.
+
+```{r}
+dds.LRT <- DESeq(dds, test="LRT", reduced=~Tissue)
+plotDispEsts(dds.LRT)
+res.LRT <- results(dds.LRT)
+save(dds.LRT,
+     file = "dds.LRT.li.tissues.no_testis.wSex.RData")
+```
+
+We display the results for the Khk genes:
+
+```{r}
+res.LRT["ENSMUSG00000029162.15", ]
+```
+
+
+```{r}
+sessionInfo()
+```
