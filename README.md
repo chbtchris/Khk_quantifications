@@ -1,6 +1,6 @@
 # Correction of gene model annotations improves isoform abundance estimates: the example of ketohexokinase (Khk)
 
-[![DOI](https://zenodo.org/badge/159229285.svg)](https://zenodo.org/badge/latestdoi/159229285)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.2583233.svg)](https://doi.org/10.5281/zenodo.2583233)
 
 This Git repository contains the code used to generate the analysis and figures presented 
 in the manuscript. Please make sure to adjust the path to the scripts and annotations before use.
