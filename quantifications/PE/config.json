@@ -4,9 +4,9 @@
     },
     "directories": {
         "alignment": {
-            "scratch": "",
-            "work": "li/alignments/",
-            "khk": "/cluster/work/krek/projects/KREK_009_total_body/tissues/Khk/"
+            "scratch": "/scratch/alignments/",
+            "work": "/li/alignments/",
+            "khk": "/Khk/alignments/"
         },
         "bam_sort": {
             "scratch": "/scratch/"
@@ -27,6 +27,9 @@
         	"UTR": "/salmon_UTR/",
         	"3pUTR" : "/salmon_3pUTR/"
         	"noIR": "/salmon_no_IR/"
+        },
+        "stringtie": {
+        	"naive": "/li/stringtie/"
         }
     },
     "reference": {
